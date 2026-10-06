@@ -22,19 +22,17 @@ APP_DIR = Path(__file__).resolve().parent
 
 def find_file(filename):
     """
-    Finds a file automatically in the deployed project.
-
-    It checks:
-    1. Same folder as app.py
-    2. data/
-    3. output/
-    4. frontend/
-    5. backend/
-    6. Parent folders
-    7. Recursive subfolders
+    Find project files whether they are:
+    - beside app.py
+    - inside data/
+    - inside output/
+    - inside frontend/
+    - inside backend/
+    - inside another project subfolder
     """
 
-    search_locations = [
+    # First check common locations
+    locations = [
         APP_DIR,
         APP_DIR / "data",
         APP_DIR / "output",
@@ -47,20 +45,33 @@ def find_file(filename):
         APP_DIR.parent / "backend",
     ]
 
-    # --------------------------------------------------------
-    # Check common locations
-    # --------------------------------------------------------
-
-    for folder in search_locations:
-
+    for folder in locations:
         try:
-            file_path = folder / filename
+            path = folder / filename
 
-            if file_path.is_file():
-                return file_path
+            if path.is_file():
+                return path
 
         except Exception:
             pass
+
+    # If not found, search recursively
+    for root in [APP_DIR, APP_DIR.parent]:
+
+        try:
+            if root.exists():
+
+                for path in root.rglob(filename):
+
+                    if path.is_file():
+                        return path
+
+        except Exception:
+            pass
+
+    return None
+
+
 
     # --------------------------------------------------------
     # Recursive search
@@ -96,67 +107,53 @@ def find_file(filename):
 
 def load_csv(filename):
 
-    file_path = find_file(filename)
+    path = find_file(filename)
 
-    if file_path is None:
-
+    if path is None:
         st.warning(
-            f"File not found in the deployed project: {filename}"
+            f"File not found in the project: {filename}"
         )
-
         return None
 
     try:
-
-        return pd.read_csv(file_path)
+        return pd.read_csv(path)
 
     except pd.errors.EmptyDataError:
-
-        st.info(
-            f"{filename} is empty."
-        )
-
+        st.warning(f"{filename} is empty.")
         return None
 
     except Exception as e:
-
         st.error(
             f"Could not load {filename}: {e}"
         )
-
         return None
+
+
 
 
 # ============================================================
 # LOAD GEOJSON
 # ============================================================
 
+
 def load_geojson(filename):
 
-    file_path = find_file(filename)
+    path = find_file(filename)
 
-    if file_path is None:
-
+    if path is None:
         st.warning(
-            f"File not found in the deployed project: {filename}"
+            f"File not found in the project: {filename}"
         )
-
         return None
 
     try:
-
-        gdf = gpd.read_file(file_path)
-
-        return gdf
+        return gpd.read_file(path)
 
     except Exception as e:
-
         st.error(
             f"Could not load {filename}: {e}"
         )
-
         return None
-
 
 # ============================================================
 # DISPLAY GEOJSON MAP
