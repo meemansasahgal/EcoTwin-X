@@ -11,10 +11,21 @@ from pathlib import Path
 # PROJECT PATHS
 # ============================================================
 
+# ============================================================
+# PROJECT PATHS
+# ============================================================
+
 PROJECT_DIR = Path(__file__).resolve().parent.parent
+
 DATA_DIR = PROJECT_DIR / "data"
 OUTPUT_DIR = PROJECT_DIR / "output"
 
+# If data/output folders do not exist, use repository root
+if not DATA_DIR.exists():
+    DATA_DIR = PROJECT_DIR
+
+if not OUTPUT_DIR.exists():
+    OUTPUT_DIR = PROJECT_DIR
 
 # ============================================================
 # PAGE CONFIG
